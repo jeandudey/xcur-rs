@@ -7,6 +7,36 @@
 # xcur-rs
 Parser for XCursor files in Rust.
 
+## Usage
+Add this to your `Cargo.toml`:
+```toml
+[dependencies]
+xcur = "0.1.*"
+```
+
+And this to your crate root:
+```rust
+extern crate xcur;
+```
+
+## Example
+```rust
+extern crate xcur;
+extern crate nom;
+
+use xcur::parser::File as XCursorFile;
+use nom::IResult;
+
+fn main() {
+    let data = include_bytes!("./assets/xterm");
+    let xcursor_file = match XCursorFile::parse(data) {
+        IResult::Done(_i, file) => file,
+        IResult::Incomplete(e) => panic!("Incomplete, needed: {}", e),
+        IResult::Error(e) => panic!("Error: {}", e),
+    };
+}
+```
+
 ## License
 ```
 xcur-rs - Parser for XCursor files in Rust

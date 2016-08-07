@@ -26,7 +26,16 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-//! Welcome!
+//! # Usage
+//! Put this in your `Cargo.toml`:
+//! ```toml
+//! [dependencies]
+//! xcur = "0.1.*"
+//! ```
+//! And this to your crate root:
+//! ```rust
+//! extern crate xcur;
+//! ```
 
 #[macro_use]
 extern crate nom;

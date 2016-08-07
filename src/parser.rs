@@ -15,7 +15,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-//! Welcome!
+//! # Basic usage
+//! To parse a `XCursor` file you will need to use the `File::parse` function,
+//! you need to pass to it an `u8` inmutable slice and voila! that's all.
 
 use super::nom::IResult;
 

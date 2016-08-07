@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://travis-ci.org/jeandudey/xcb-image-rs">
+    <img src="https://travis-ci.org/jeandudey/xcb-image-rs.svg?branch=master">
+  </a>
+</p>
+
 # xcur-rs
 Parser for XCursor files in Rust.
 

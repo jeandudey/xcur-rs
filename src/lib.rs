@@ -21,12 +21,21 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
+//! Welcome!
+
 #[macro_use]
 extern crate nom;
 
+pub mod parser;
+
 #[cfg(test)]
 mod tests {
+    use super::parser;
+
     #[test]
-    fn it_works() {
+    fn parse_sample_file() {
+        let data = include_bytes!("../assets/xterm");
+        let file = parser::File::parse(data).unwrap();
     }
 }

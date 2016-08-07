@@ -2,6 +2,12 @@
   <a href="https://travis-ci.org/jeandudey/xcur-rs">
     <img src="https://travis-ci.org/jeandudey/xcur-rs.svg?branch=master">
   </a>
+
+  <br>
+
+  <a href="http://jeandudey.github.io/xcur-rs/index.html">
+    <strong>Documentation</strong>
+  </a>
 </p>
 
 # xcur-rs

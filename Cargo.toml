@@ -2,6 +2,7 @@
 name = "xcur"
 version = "0.1.0"
 authors = ["Jean Pierre Dudey <jeandudey@hotmail.com>"]
+license = "GPL-3.0"
 
 [dependencies]
 nom = "1.2.4"

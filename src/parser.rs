@@ -19,7 +19,7 @@
 //! To parse a `XCursor` file you will need to use the `File::parse` function,
 //! you need to pass to it an `u8` inmutable slice and voila! that's all.
 
-use super::nom::IResult;
+use super::nom::{IResult, Err, ErrorKind};
 
 /// 32-bit unsigned integer
 pub type CARD32 = u32;
@@ -263,6 +263,25 @@ impl Image {
     }
 }
 
+macro_rules! custom_try (
+    ($i:expr, $submac:ident!( $($args:tt)* )) => (
+        match $submac!($i, $($args)*) {
+            IResult::Done(i,o)     => (i,o),
+            IResult::Error(e)      => return IResult::Error(Err::Code(ErrorKind::Custom(ParseError::from(e)))),
+            IResult::Incomplete(i) => return IResult::Incomplete(i)
+        }
+    );
+    ($i:expr, $f:expr) => (
+        custom_try!($i, call!($f))
+    );
+);
+
+macro_rules! throw_err {
+    ($e:expr) => {
+        return IResult::Error(Err::Code(ErrorKind::Custom($e)));
+    }
+}
+
 /// The `XCursor` file
 #[derive(Debug, Clone)]
 pub struct File {
@@ -275,14 +294,17 @@ pub struct File {
 
 impl File {
     /// Parses an XCursor file
-    pub fn parse(i: &[u8]) -> IResult<&[u8], Self> {
-        let (_, header) = try_parse!(i, Header::parse);
-        header.validate().unwrap();
+    pub fn parse(i: &[u8]) -> IResult<&[u8], Self, ParseError> {
+        let (_, header) = custom_try!(i, Header::parse);
+        match header.validate() {
+            Ok(_) => (),
+            Err(e) => throw_err!(ParseError::InvalidHeader(e)),
+        }
 
         let mut tocs: Vec<TableOfContents> = Vec::with_capacity(header.ntoc as usize);
         let mut toc_count: usize = HEADER_SIZE + 4;
         for _ in 0..header.ntoc {
-            let (_, toc) = try_parse!(&i[toc_count..], TableOfContents::parse);
+            let (_, toc) = custom_try!(&i[toc_count..], TableOfContents::parse);
             tocs.push(toc);
             toc_count += TABLE_OF_CONTENTS_SIZE;
         }
@@ -293,16 +315,32 @@ impl File {
         for toc in tocs {
             match toc.type_ {
                 COMMENT_TYPE => {
-                    let (_, comment) = try_parse!(&i[(toc.position as usize)..], Comment::parse);
-                    assert_eq!(comment.chunkheader.version, COMMENT_VERSION);
+                    let (_, comment) = custom_try!(&i[(toc.position as usize)..], Comment::parse);
+                    if comment.chunkheader.version != COMMENT_VERSION {
+                        throw_err!(ParseError::InvalidCommentVersion);
+                    }
+
                     comments.push(comment);
                 }
                 IMAGE_TYPE => {
-                    let (_, image) = try_parse!(&i[(toc.position as usize)..], Image::parse);
-                    assert_eq!(image.chunkheader.version, IMAGE_VERSION);
+                    let (_, image) = custom_try!(&i[(toc.position as usize)..], Image::parse);
+                    if image.chunkheader.version != IMAGE_VERSION {
+                        throw_err!(ParseError::InvalidImageVersion);
+                    }
+
+                    if image.width >= IMAGE_MAX_SIZE {
+                        throw_err!(ParseError::InvalidImageWidth);
+                    } else if image.height >= IMAGE_MAX_SIZE {
+                        throw_err!(ParseError::InvalidImageHeight);
+                    } else if image.xhot >= image.width {
+                        throw_err!(ParseError::InvalidImageXHot);
+                    } else if image.yhot >= image.height {
+                        throw_err!(ParseError::InvalidImageYHot);
+                    }
+
                     images.push(image);
                 }
-                _ => unreachable!(),
+                _ => throw_err!(ParseError::InvalidTOC),
             }
         }
 
@@ -311,5 +349,74 @@ impl File {
                           comments: comments,
                           images: images,
                       })
+    }
+}
+
+/// Represents an error when parsing an `XCursor` file
+#[derive(Debug)]
+pub enum ParseError<'a> {
+    /// A `nom` error
+    NomError(Err<&'a [u8], u32>),
+
+    /// Invalid header
+    InvalidHeader(&'static str),
+
+    /// Invalid comment version in file
+    InvalidCommentVersion,
+
+    /// Invalid image version in file
+    InvalidImageVersion,
+
+    /// Invalid image width
+    InvalidImageWidth,
+
+    /// Invalid image height
+    InvalidImageHeight,
+
+    /// Invalid image X hot
+    InvalidImageXHot,
+
+    /// Invalid image X hot
+    InvalidImageYHot,
+
+    /// Invalid `TableOfContents` type
+    InvalidTOC,
+}
+
+impl<'a> From<Err<&'a [u8], u32>> for ParseError<'a> {
+    fn from(e: Err<&'a [u8], u32>) -> ParseError<'a> {
+        ParseError::NomError(e)
+    }
+}
+
+impl<'a> ::std::fmt::Display for ParseError<'a> {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        match self {
+            &ParseError::NomError(ref e) => write!(f, "Nom Error: {}", e),
+            &ParseError::InvalidHeader(e) => write!(f, "Invalid header: {}", e),
+            &ParseError::InvalidCommentVersion => write!(f, "Invalid comment version"),
+            &ParseError::InvalidImageVersion => write!(f, "Invalid image version"),
+            &ParseError::InvalidImageWidth => write!(f, "Invalid image width"),
+            &ParseError::InvalidImageHeight => write!(f, "Invalid image height"),
+            &ParseError::InvalidImageXHot => write!(f, "Invalid image X hot"),
+            &ParseError::InvalidImageYHot => write!(f, "Invalid image Y hot"),
+            &ParseError::InvalidTOC => write!(f, "Invalid table of contents"),
+        }
+    }
+}
+
+impl<'a> ::std::error::Error for ParseError<'a> {
+    fn description(&self) -> &str {
+        match self {
+            &ParseError::NomError(_) => "Nom Error",
+            &ParseError::InvalidHeader(_) => "Invalid header",
+            &ParseError::InvalidCommentVersion => "Invalid comment version",
+            &ParseError::InvalidImageVersion => "Invalid image version",
+            &ParseError::InvalidImageWidth => "Invalid image width",
+            &ParseError::InvalidImageHeight => "Invalid image height",
+            &ParseError::InvalidImageXHot => "Invalid image X hot",
+            &ParseError::InvalidImageYHot => "Invalid image Y hot",
+            &ParseError::InvalidTOC => "Invalid table of contents",
+        }
     }
 }

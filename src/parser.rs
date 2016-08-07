@@ -1,16 +1,16 @@
 // xcur-rs - Parser for XCursor files in Rust
 // Copyright (C) 2016  Jean Pierre Dudey
-// 
+//
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -129,7 +129,7 @@ impl TableOfContents {
 pub struct ChunkHeader {
     /// Bytes used in the chunk
     pub header: CARD32,
-    
+
     /// The chunk type
     pub type_: CARD32,
 
@@ -190,11 +190,13 @@ impl Comment {
         let (i2, length) = try_parse!(i1, card32);
         let (i3, string) = try_parse!(i2, take!(length));
 
-        IResult::Done(i3, Comment {
-            chunkheader: chunkheader,
-            length: length,
-            string: String::from_utf8(string.to_vec()).unwrap_or_else(|_| String::new()),
-        })
+        IResult::Done(i3,
+                      Comment {
+                          chunkheader: chunkheader,
+                          length: length,
+                          string: String::from_utf8(string.to_vec())
+                              .unwrap_or_else(|_| String::new()),
+                      })
     }
 }
 
@@ -246,15 +248,16 @@ impl Image {
             count += ::std::mem::size_of::<CARD32>();
         }
 
-        IResult::Done(i3, Image {
-            chunkheader: chunkheader,
-            width: width,
-            height: height,
-            xhot: xhot,
-            yhot: yhot,
-            delay: delay,
-            pixels: pixels,
-        })
+        IResult::Done(i3,
+                      Image {
+                          chunkheader: chunkheader,
+                          width: width,
+                          height: height,
+                          xhot: xhot,
+                          yhot: yhot,
+                          delay: delay,
+                          pixels: pixels,
+                      })
     }
 }
 
@@ -271,7 +274,7 @@ pub struct File {
 impl File {
     /// Parses an XCursor file
     pub fn parse(i: &[u8]) -> IResult<&[u8], Self> {
-        let (_, header) = try_parse!(i, Header::parse); 
+        let (_, header) = try_parse!(i, Header::parse);
         header.validate().unwrap();
 
         println!("{:?}", header);
@@ -295,20 +298,21 @@ impl File {
                     println!("{:?}", comment);
                     assert_eq!(comment.chunkheader.version, COMMENT_VERSION);
                     comments.push(comment);
-                },
+                }
                 IMAGE_TYPE => {
                     let (_, image) = try_parse!(&i[(toc.position as usize)..], Image::parse);
                     println!("{:?}", image);
                     assert_eq!(image.chunkheader.version, IMAGE_VERSION);
                     images.push(image);
-                },
+                }
                 _ => unreachable!(),
             }
         }
 
-        IResult::Done(i, File {
-            comments: comments,
-            images: images,
-        })
+        IResult::Done(i,
+                      File {
+                          comments: comments,
+                          images: images,
+                      })
     }
 }

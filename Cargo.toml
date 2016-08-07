@@ -1,6 +1,6 @@
 [package]
 name = "xcur"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Jean Pierre Dudey <jeandudey@hotmail.com>"]
 license = "GPL-3.0"
 description = "Library for parsing XCursor files"

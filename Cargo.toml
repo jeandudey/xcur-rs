@@ -7,3 +7,9 @@ description = "Library for parsing XCursor files"
 
 [dependencies]
 nom = "1.2.4"
+
+clippy = { version = "0.0.80", optional = true }
+
+[features]
+default = []
+dev = ["clippy"]

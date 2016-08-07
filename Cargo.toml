@@ -4,6 +4,9 @@ version = "0.1.1"
 authors = ["Jean Pierre Dudey <jeandudey@hotmail.com>"]
 license = "GPL-3.0"
 description = "Library for parsing XCursor files"
+documentation = "http://jeandudey.github.io/xcur-rs/index.html"
+homepage = "https://www.github.com/jeandudey/xcur-rs/"
+repository = "https://www.github.com/jeandudey/xcur-rs/"
 
 [dependencies]
 nom = "1.2.4"

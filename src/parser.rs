@@ -279,13 +279,10 @@ impl File {
         let (_, header) = try_parse!(i, Header::parse);
         header.validate().unwrap();
 
-        println!("{:?}", header);
-
         let mut tocs: Vec<TableOfContents> = Vec::with_capacity(header.ntoc as usize);
         let mut toc_count: usize = HEADER_SIZE + 4;
         for _ in 0..header.ntoc {
             let (_, toc) = try_parse!(&i[toc_count..], TableOfContents::parse);
-            println!("{:?}", toc);
             tocs.push(toc);
             toc_count += TABLE_OF_CONTENTS_SIZE;
         }
@@ -297,13 +294,11 @@ impl File {
             match toc.type_ {
                 COMMENT_TYPE => {
                     let (_, comment) = try_parse!(&i[(toc.position as usize)..], Comment::parse);
-                    println!("{:?}", comment);
                     assert_eq!(comment.chunkheader.version, COMMENT_VERSION);
                     comments.push(comment);
                 }
                 IMAGE_TYPE => {
                     let (_, image) = try_parse!(&i[(toc.position as usize)..], Image::parse);
-                    println!("{:?}", image);
                     assert_eq!(image.chunkheader.version, IMAGE_VERSION);
                     images.push(image);
                 }

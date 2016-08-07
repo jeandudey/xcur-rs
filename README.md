@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://travis-ci.org/jeandudey/xcb-image-rs">
-    <img src="https://travis-ci.org/jeandudey/xcb-image-rs.svg?branch=master">
+  <a href="https://travis-ci.org/jeandudey/xcur-rs">
+    <img src="https://travis-ci.org/jeandudey/xcur-rs.svg?branch=master">
   </a>
 </p>
 
